@@ -1,0 +1,61 @@
+---
+
+ - name: include user input variables
+   include_vars: "{{ tempDir }}/{{ as3_appName }}/{{ as3_appName }}.yml"
+
+# Getting AS3 app (only) template and replace with user input values
+ - name: Template
+   template:
+     src: "{{ tempDir }}/templates/{{ app_kind }}.j2"
+     dest: "{{ tempDir }}/{{ as3_appName }}/{{ as3_appName }}_{{ app_kind }}.json"
+
+# Creating the full AS3 declaration
+ - name: generate timestamped UUID
+   command: uuidgen -t
+   register: uuid_res
+
+ - name: override the uuid variable
+   set_fact:
+     uuid: "{{ uuid_res.stdout }}"
+
+ - name: Check if tenant file exists.
+   stat:
+      path: "{{ tempDir }}/{{ as3_tenantName }}/{{as3_tenantName}}.json"
+   register: tenant_details
+
+ - name: Setting the fact if the tenant already exists or if we need to create it
+   set_fact: 
+     tenant_exists: true
+   when: tenant_details.stat.exists
+
+ - name: the tenant does not exist
+   set_fact:
+     tenant_exists: false
+   when: not tenant_details.stat.exists  
+
+ - local_action: copy content={{ tempDir }}/{{ as3_tenantName }}/{{ as3_tenantName }}.json dest={{ tempDir }}/{{ as3_tenantName }}/previous_{{ as3_tenantName }}.json
+   when: tenant_exists
+
+# iF tenant does not exist, we should create it
+ - name: create a new tenant declaration
+   template:
+     src: "{{ tempDir }}/templates/tenant_only.j2"
+     dest: "{{ tempDir }}/{{ as3_tenantName }}/{{ as3_tenantName }}.json"
+   when: not tenant_exists
+
+ - name: create the Payload
+   command: python /opt/reconciliate.py -i {{ tempDir }}/{{ as3_tenantName }}/{{ as3_tenantName }}.json -t {{ as3_tenantName }} -n {{ as3_appName }} -a {{ tempDir }}/{{ as3_appName }}/{{ as3_appName }}_{{ app_kind }}.json -o {{ tempDir }}/{{ as3_tenantName }}/{{ as3_tenantName }}.json chdir={{ tempDir }} 
+
+ - name: Send declaration
+   uri:
+        url: "https://{{ bigip }}//mgmt/shared/appsvcs/declare"
+        method: POST
+        user: admin
+        #password: "{{ hostvars[inventory_hostname]['provider']['password'] }}"
+        password: admin
+        body: "{{ lookup('file','{{ tempDir }}/{{ as3_tenantName }}/{{ as3_tenantName }}.json') }}"
+        status_code: 200
+        timeout: 300
+        body_format: json
+        validate_certs: no
+   register: tenant_response

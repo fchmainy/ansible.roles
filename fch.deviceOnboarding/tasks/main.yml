@@ -1,0 +1,39 @@
+# Create a safe and isolated workspace to work on
+
+# - name: 2.Clone the code repository to a temporary workspace.
+#   git:
+#     repo: "ssh://git@gitlab.com/{{ group }}/{{ tenant }}.git"
+#     dest: "{{ tempDir }}/"
+#     accept_hostkey: yes
+#     version: master
+#     force: yes
+#     key_file: "/home/fchmainy/.ssh/id_rsa_gitlab"
+
+
+ - name: Creates DO declaration directory
+   file:
+     path: "{{ tempDir }}/{{ deviceName }}.f5demo.fch"
+     state: directory
+
+ - name: include user input variables
+   include_vars: "{{ tempDir }}/{{ deviceName }}.f5demo.fch/{{ deviceName }}.f5demo.fch.yml"
+
+# Getting AS3 app (only) template and replace with user input values
+ - name: Template
+   template:
+     src: "{{ tempDir }}/templates/{{ device_kind }}.j2"
+     dest: "{{ tempDir }}/{{ deviceName }}.f5demo.fch/{{ deviceName }}_{{ device_kind }}.json"
+
+ - name: Send declaration
+   uri:
+        url: "https://{{ net_mgmt_addr }}/mgmt/shared/declarative-onboarding"
+        method: POST
+        user: admin
+        #password: "{{ hostvars[inventory_hostname]['provider']['password'] }}"
+        password: "{{ user_admin_pwd }}"
+        body: "{{ lookup('file','{{ tempDir }}/{{ deviceName }}.f5demo.fch/{{ deviceName }}_{{ device_kind }}.json') }}"
+        status_code: 202
+        timeout: 300
+        body_format: json
+        validate_certs: no
+   register: tenant_response

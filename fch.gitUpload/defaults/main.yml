@@ -1,0 +1,6 @@
+---
+# defaults file for fch.gitUpload
+gitpush_additional_params: '--force'
+gitpush_ssh_keys: ["/home/fchmainy/.ssh/forum2019"]
+as3_appName: app
+tempDir: ''

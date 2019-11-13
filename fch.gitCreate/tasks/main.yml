@@ -1,0 +1,14 @@
+---
+# tasks file for fch.createGit
+ - name: Create a new Repository on Gitlab
+   uri:
+        url: "https://gitlab.com/api/v4/projects/{{ as3_appName }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+        status_code: 200, 404
+        timeout: 300
+        validate_certs: no
+   register: result
+   ignore_errors: true

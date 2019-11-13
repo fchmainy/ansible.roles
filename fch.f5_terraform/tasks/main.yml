@@ -1,0 +1,49 @@
+---
+
+ - name: Creates Workspace directory
+   file:
+     path: "{{ tempDir }}/{{ deviceName }}.f5demo.fch/"
+     state: directory
+
+ - name: Create Terraform VM subdirectory
+   file:
+     path: "{{ tempDir }}/terraform/{{ deviceName }}"
+     state: directory
+
+ - name: include user input variables
+   include_vars: "{{ tempDir }}/{{ deviceName }}.f5demo.fch/{{ deviceName }}.f5demo.fch.yml"
+
+# Replacing terraform variable template with user input values
+ - name: Templates
+   template:
+     src: "{{ tempDir }}/templates/terraform_variables.tf.j2"
+     dest: "{{ tempDir }}/terraform/{{ deviceName }}/{{ deviceName }}.tf"
+ - name: build.tf
+   template:
+     src: "build.tf"
+     dest: "{{ tempDir }}/terraform/{{ deviceName }}/build.tf"
+
+# Append the Source declaration into main.tf
+ - name: Append the Source declaration into main.tf
+   lineinfile:
+     path: "{{ tempDir }}/terraform/main.tf"
+     line: 'module "{{ deviceName }}" { source = "./{{ deviceName }}" }'
+
+# - terraform:
+#     project_path: "{{ tempDir }}/terraform"
+#     state: present
+#
+# - terraform:
+#     project_path: "{{ tempDir }}/terraform"
+#     state: "{{ state }}"
+#     force_init: true
+
+ - name: initialize terraform project
+   command: terraform init chdir="{{ tempDir }}/terraform"
+
+ - name: plan terraform project
+   command: terraform plan -out "{{ deviceName }}_output" chdir="{{ tempDir }}/terraform"
+
+ - name: apply terraform project
+   command: terraform apply "{{ deviceName }}_output" chdir="{{ tempDir }}/terraform"
+   ignore_errors: true

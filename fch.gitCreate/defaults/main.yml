@@ -1,0 +1,5 @@
+---
+# defaults file for fch.createGit
+gitlab_token: CZpHpaU9t72s9_CZsfzN
+as3_appName: app
+tmp: ''

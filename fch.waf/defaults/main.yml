@@ -1,0 +1,6 @@
+---
+validate_certs: False
+app_name: "f5-demo-app"
+username: "admin"
+password: "admin"
+filename: "f5_demo_app_asm.xml"

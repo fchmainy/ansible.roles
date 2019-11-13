@@ -1,0 +1,77 @@
+  - name: include user input variables
+    include_vars: "{{ tempDir }}/{{ deviceName }}.f5demo.fch/{{ deviceName }}.f5demo.fch.yml"
+
+  # Set Var for curent DO file name
+  - name: Retrieve DO Install Version
+    find:
+      paths: "{{ tempDir }}/do/"
+      patterns: "f5-decl*.rpm"
+    register: dorpm
+    delegate_to: localhost
+
+# Set Var for curent AS3 file name
+  - name: Retrieve AS3 Install Version
+    find:
+      paths: "{{ tempDir }}/as3/"
+      patterns: "f5-appsvcs*.rpm"
+    register: as3rpm
+    delegate_to: localhost
+
+# Set Var for curent TS file name
+  - name: Retrieve TS Install Version
+    find:
+      paths: "{{ tempDir }}/ts/"
+      patterns: "f5-telem*.rpm"
+    register: tsrpm
+    delegate_to: localhost
+
+  - name: Install DO
+    command: "/opt/install-do-rpm.sh {{ net_mgmt_addr }}  admin:{{ user_admin_pwd }} {{ dorpm.files[0].path }}"
+
+#  - name: Install TS
+#    command: "/opt/install-ts-rpm.sh {{ net_mgmt_addr }}  admin:{{ user_admin_pwd }} {{ tsrpm.files[0].path }}"
+
+  - name: Install AS3
+    command: "/opt/install-as3-rpm.sh {{ net_mgmt_addr }}  admin:{{ user_admin_pwd }} {{ as3rpm.files[0].path }}"
+
+#
+#  - name: Install DO
+#    bigip_iapplx_package:
+#      package: "{{ dorpm.files[0].path }}"
+#      user: admin
+#      password: admin
+#      server: "{{ net_mgmt_addr }}"
+#      state: present
+#      validate_certs: no
+#    delegate_to: localhost
+#
+#  - pause:
+#      seconds: 5
+#
+#  - name: Install AS3
+#    bigip_iapplx_package:
+#      package: "{{ as3rpm.files[0].path }}"
+#      provider:
+#        user: admin
+#        password: admin
+#        server: "{{ net_mgmt_addr }}"
+#      state: present
+#      validate_certs: no
+#    delegate_to: localhost
+#
+#  - pause:
+#      seconds: 5
+#
+#  - name: Install TS
+#    bigip_iapplx_package:
+#      provider:
+#        user: admin
+#        password: admin
+#        server: "{{ net_mgmt_addr }}"
+#      package: "{{ tsrpm.files[0].path }}"
+#      state: present
+#      validate_certs: no
+#    delegate_to: localhost
+#
+#  - pause:
+#      seconds: 5

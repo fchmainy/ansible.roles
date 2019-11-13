@@ -1,0 +1,17 @@
+---
+# defaults file for fch.f5_terraform
+vsphere_server: "vcenter60.paris.f5se.com"
+vsphere_user: "chmainy@paris.f5se.com"
+vsphere_password: "#Matthieu-fdp#"
+vsphere_datacenter: "LabSE_Paris"
+vsphere_datastore: "datastore esx2"
+vsphere_compute_cluster: "Cluster Lab F5SE"
+vsphere_virtual_machine_template: "BIG-IP13.1.1.4.0.0.4"
+
+vsphere_f5_mgmt_network: "vSwitch Mgmt 192"
+vsphere_f5_prod_network : "vSwitch Prod 100"
+
+net_mgmt_gw": "192.168.1.1"
+user_root_pwd": "default1"
+user_admin_pwd": "admin1"
+

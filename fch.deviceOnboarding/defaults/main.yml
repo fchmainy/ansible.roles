@@ -1,0 +1,13 @@
+---
+label: "{{ vsphere_virtual_machine_hostname }}"
+hostname: "{{ vsphere_virtual_machine_hostname }}"
+domain: "f5demo.fch"
+bigiq_ip: "192.168.1.239"
+bigiq_username: "admin"
+bigiq_password: "admin"
+licence_type: "BEST25M"
+root_old_password: "F5CY19"
+root_new_password: "ForumCY19"
+net_ip: "10.100.26.163"
+net_mask: "255.255.255.0"
+default_gw: "10.100.1.254"

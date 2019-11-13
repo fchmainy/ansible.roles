@@ -1,0 +1,11 @@
+---
+# tasks file for fch.gitCollect
+  - name: 2.Clone the code repository to a temporary workspace.
+    git:
+        repo: "ssh://git@gitlab.com/{{ gitlab_group }}/{{ gitlab_project }}.git"
+        dest: "{{ tempDir }}/{{ gitlab_project }}/"
+        #dest: "/tmp/tenants/{{ tenant }}"
+        accept_hostkey: yes
+        version: master
+        force: yes
+        key_file: "/home/fchmainy/.ssh/forum2019"

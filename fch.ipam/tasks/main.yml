@@ -1,0 +1,30 @@
+---
+      - name: Get a New Token
+        phpipam_getToken:
+           ipam: "{{ inventory_hostname }}"
+           user: "{{ user }}"
+           password: "{{ password }}"
+        register: myToken
+
+      - name: get Next Available IP Address
+        phpipam_getNextIP:
+           ipam: "{{ inventory_hostname }}"
+           user: "{{ user }}"
+           password: "{{ password }}"
+           tenant: "{{ tenant }}"
+           token: "{{ myToken.tokenId }}"
+        register: myIP
+
+      - name: reserve the Next Available IP Address
+        phpipam_reserveNextIP:
+           ipam: "{{ inventory_hostname }}"
+           user: "{{ user }}"
+           password: "{{ password }}"
+           tenant: "{{ tenant }}"
+           token: "{{ myToken.tokenId }}"
+           fqdn: "{{ fqdn }}"
+           ipAddress: "{{ myIP.ipAddress }}"
+
+      - copy:
+            content: "ipAddress: {{ myIP.ipAddress }}"
+            dest: "{{ fqdn }}.yml"

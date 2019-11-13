@@ -1,0 +1,174 @@
+      - name: include user input variables
+        include_vars: "{{ tempDir }}/{{ as3_appName }}/{{ as3_appName }}.yml"
+
+      - name: UPLOAD XML ASM POLICY...
+        f5_uploadFile:
+            server: "{{ bigip }}"
+            fileName: "{{ tempDir }}/waf_templates/waf_policy_template.xml"
+            fileType: "policy"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: result
+
+      - name: IMPORT POLICY
+        f5_asm_importPolicy:
+            server: "{{ bigip }}"
+            serviceName: "{{ appName }}"
+            fileName: "waf_policy_template.xml"
+            targetPolicy: "/{{ partition }}/{{ appName }}_waf"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: taskId
+
+      - name: GET STATUS OF THE IMPORT
+        f5_asm_getStatus:
+            server: "{{ bigip }}"
+            taskId: "{{taskId.taskId}}"
+            taskType: "import-policy"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: myStatus
+        until: myStatus.taskStatus | default("COMPLETED")== "COMPLETED"
+        retries: 10
+        delay: 5
+
+      - name: get ID
+#        command: python /opt/waf_uuid.py "/{{ as3_tenantName }}/{{ appName }}_asm"
+        f5_asm_getPolicyID:
+            server: "{{ bigip }}"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            policyName: "{{ appName }}_waf"
+            partition: "{{ as3_tenantName }}"
+            validate_certs: "{{ validate_certs }}"
+        register: policyId
+        delegate_to: localhost
+#        no_log: true
+
+      - name: ENABLE DAST
+        f5_asm_enableDAST:
+            server: "{{ bigip }}"
+            policyId: "{{ policyId.policyId }}"
+            dast: "qualys"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        
+      - name: UPLOAD XML DAST OUTPUT
+        f5_uploadFile:
+            server: "{{ bigip }}"
+            fileName: "{{ tempDir }}/{{ as3_appName }}/{{ appName }}_vuln.xml"
+            fileType: "vulnerabilities"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: taskId
+
+      - name: IMPORT VULNERABILITIES
+        f5_asm_importVulnerabilities:
+            server: "{{ bigip }}"
+            serviceName: "{{ appName }}_waf"
+            fileName: "{{ appName }}_vuln.xml"
+            policyId: "{{ policyId.policyId }}"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: taskId
+
+
+      - name: GET STATUS OF THE IMPORT
+        f5_asm_getStatus:
+            server: "{{ bigip }}"
+            taskId: "{{ taskId.importTask }}"
+            taskType: "import-vulnerabilities"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: status
+        until: status.taskStatus == "COMPLETED"
+        retries: 10
+        delay: 5
+
+      - name: COLLECT VULNERABILITIES...
+        f5_asm_collectVulnerabilities:
+            server: "{{ bigip }}"
+            policyId: "{{ policyId.policyId }}"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: vulnsArray
+
+
+      - name: RESOLVE VULNERABILITIES...
+        f5_asm_resolveVulnerabilities:
+            server: "{{ bigip }}"
+            vulnerabilities: "{{ vulnsArray.vulnerabilities }}"
+            policyId: "{{ policyId.policyId }}"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: taskId
+
+
+      - name: GET STATUS OF VULNERABILITIES RESOLVING...
+        f5_asm_getStatus:
+            server: "{{ bigip }}"
+            taskId: "{{ taskId.resolveId }}"
+            taskType: "resolve-vulnerabilities"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: status
+        until: status.taskStatus == "COMPLETED"
+        retries: 10
+        delay: 5
+
+      - name: EXPORT POLICY
+        f5_asm_exportPolicy:
+            server: "{{ bigip }}"
+            serviceName: "{{ appName }}_waf"
+            policyId: "{{policyId.policyId}}"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: taskId
+
+
+      - name: GET STATUS OF THE EXPORT
+        f5_asm_getStatus:
+            server: "{{ bigip }}"
+            taskId: "{{taskId.exportTask}}"
+            taskType: "export-policy"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: myStatus
+        until: myStatus.taskStatus | default("COMPLETED")== "COMPLETED"
+        retries: 10
+        delay: 5
+
+      - name: GET EXPORTED POLICY
+        f5_asm_getExportedPolicy:
+            server: "{{ bigip }}"
+            serviceName: "{{ appName }}_waf"
+            outputDir: "{{ tempDir }}/{{ as3_appName }}/"
+            user: "{{ username }}"
+            password: "{{ password }}"
+            validate_certs: "{{ validate_certs }}"
+        delegate_to: localhost
+        register: result

@@ -1,0 +1,7 @@
+---
+- name: Attach an ASM Policy remotly available and attach t to an existing VS
+  hosts: prod:&suresnes
+  gather_facts: false
+
+  roles:
+    - { role: fch.attachWAF }

@@ -1,0 +1,7 @@
+---
+provider:
+  server: localhost
+  user: admin
+  password: admin
+  validate_certs: no
+  server_port: 443

@@ -1,0 +1,5 @@
+---
+# defaults file for fch.gitCollect
+gitlab_token: CZpHpaU9t72s9_CZsfzN
+gitlab_group: fch_security
+gitlab_project: gitlab_project

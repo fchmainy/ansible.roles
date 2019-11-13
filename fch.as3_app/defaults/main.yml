@@ -1,0 +1,17 @@
+---
+# defaults file for fch.as3_app
+bigip: 192.168.1.142
+app_kind: "fastL4"
+as3_tenantName: myTenant
+as3_appName: myApp
+as3_virtualIP: 10.100.26.11
+as3_virtualPort: 80
+loadBalancingMode: least-connections-member
+members:
+  - {as3_nodeIP: 10.100.26.101, as3_nodePort: 80, as3_adminState: enable}
+  - {as3_nodeIP: 10.100.26.102, as3_nodePort: 80, as3_adminState: enable}
+
+# SSL Attributes: only used for HTTPS deployments
+pki_cert: "/Common/myapp.f5demo.fch.crt"
+pki_key: "/Common/myapp.f5demo.fch.key"
+db_chain_ca: "/Common/2014-2029_FCH_Users_Authentication.crt"

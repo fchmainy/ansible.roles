@@ -1,0 +1,57 @@
+    - name: Download the ASM XML Policy to /tmp
+      get_url:
+        url: "https://raw.githubusercontent.com/fchmainy/my1stTest/master/{{ filename }}"
+        dest: "/tmp/{{ filename }}"
+        force: no
+      delegate_to: localhost
+ 
+    - name: Create ASM policy
+      bigip_asm_policy:
+        name: "{{ app_name}}_waf"
+        file: "/tmp/{{ filename }}"
+        password: "{{ password }}"
+        server: "{{ inventory_hostname }}"
+        validate_certs: "{{ validate_certs }}"
+        user: "{{ username }}"
+      delegate_to: localhost
+
+    - name: Create published policy with 1 stubbed rule
+      bigip_policy:
+        name: "{{ app_name }}_policy"
+        state: present
+        rules:
+          - rule1
+        password: "{{ password }}"
+        server: "{{ inventory_hostname }}"
+        validate_certs: "{{ validate_certs }}"
+        user: "{{ username }}"
+      delegate_to: localhost
+
+    - name: Attach ASM policy to LTM policy rule
+      bigip_policy_rule:
+        policy: "{{ app_name }}_policy"
+        name: rule1
+        actions:
+          - type: enable
+            asm_policy: "{{ app_name }}_waf"
+        server: "{{ inventory_hostname }}"
+        validate_certs: "{{ validate_certs }}"
+        user: "{{ username }}"
+        password: "{{ password }}"
+      delegate_to: localhost
+
+    - name: Apply LTM Policy to Virtual Server
+      bigip_virtual_server:
+        server: "{{ inventory_hostname }}"
+        user: admin
+        password: admin
+        state: present
+        name: "{{ app_name }}_vs"
+        all_profiles:
+          - http_w_xff
+          - websecurity
+        policies:
+          - "{{ app_name }}_policy"
+        validate_certs: "{{ validate_certs }}"
+      delegate_to: localhost
+

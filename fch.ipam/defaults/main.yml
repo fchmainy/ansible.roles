@@ -1,0 +1,5 @@
+---
+user: "admin"
+password: "Changeme123"
+fqdn: "willbeoverriden"
+tenant: "7"
